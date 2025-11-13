@@ -4,6 +4,7 @@ import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSiderbar from "./_components/AppSiderbar"
 import { ClerkProvider } from "@clerk/nextjs";
+import { Provider } from "@radix-ui/react-tooltip";
 
 
 const geistSans = Geist({
@@ -36,7 +37,9 @@ export default function RootLayout({
           <SidebarProvider>
             <AppSiderbar></AppSiderbar>
             <SidebarTrigger></SidebarTrigger>
-            {children}
+            <Provider>
+              {children}
+            </Provider>
           </SidebarProvider>
 
         </body>
