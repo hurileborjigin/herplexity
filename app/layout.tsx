@@ -4,7 +4,8 @@ import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSiderbar from "./_components/AppSiderbar"
 import { ClerkProvider } from "@clerk/nextjs";
-import { Provider } from "@radix-ui/react-tooltip";
+
+import Provider from "./provider";
 
 
 const geistSans = Geist({

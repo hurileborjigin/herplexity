@@ -1,12 +1,16 @@
 "use client"
 import { useUser } from '@clerk/nextjs'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { supabase } from "@/services/supabase"
+import { UserDetailContext } from "@/context/UserDetailContext"
 
 function Provider({ children }) {
     const { user } = useUser();
     useEffect(() => {
         user && CreateUser();
     }, [user])
+
+    const [userDetail, setUserDetail] = useState();
 
     const CreateUser = async () => {
         // If user already exists
@@ -16,7 +20,6 @@ function Provider({ children }) {
             .select('*')
             .eq('email', user?.primaryEmailAddress.emailAddress);
 
-        console.log(Users);
         if (Users.length == 0) {
 
             const { data, error } = await supabase
@@ -24,18 +27,25 @@ function Provider({ children }) {
                 .insert([
                     {
                         name: user?.fullName,
-                        email: user?.primaryEmailAddress
+                        email: user?.primaryEmailAddress.emailAddress
                     },
                 ])
                 .select();
-            console.log(data)
+
+            setUserDetail(data[0]);
+            return;
 
         }
+        setUserDetail(Users[0]);
 
 
     }
     return (
-        <div className='w-full'>{children}</div>
+        <UserDetailContext.Provider value={{ userDetail, setUserDetail }}>
+            <div className='w-full'>
+                {children}
+            </div>
+        </UserDetailContext.Provider>
     )
 }
 

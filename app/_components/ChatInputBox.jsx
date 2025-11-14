@@ -1,8 +1,8 @@
 'use client'
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Atom, AudioLines, Check, Cpu, Globe, Mic, Paperclip, SearchCheck } from 'lucide-react'
+import { ArrowRight, Atom, AudioLines, Check, Cpu, Globe, Mic, Paperclip, SearchCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AIModelsOption } from "@/services/Shared"
 
@@ -14,10 +14,49 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { supabase } from '@/services/supabase'
+import { useUser } from '@clerk/nextjs'
+
+import { v4 as uuidv4 } from 'uuid';
+import { useRouter } from 'next/navigation'
+
 
 
 function ChatInputBox() {
     const [selectedModel, setSelectedModel] = React.useState(AIModelsOption[0])
+
+    
+
+    const [userSearchInput, setUserSearchInput] = useState();
+    const [searchType, setSearchType] = useState('search');
+
+    const { user } = useUser();
+
+    const [loading, setLoading] = useState(false);
+
+    const router = useRouter();
+
+    const onSearchQuery = async () => {
+        setLoading(true);
+        const libId= uuidv4();
+        const {data} = await supabase.from('Library').insert([{
+            searchInput: userSearchInput,
+            userEmail: user?.primaryEmailAddress.emailAddress,
+            type: searchType,
+            libId: libId
+        }]).select();
+        setLoading(false);
+
+
+
+
+        // redirect to a new page
+        router.push('/search/'+ libId)
+        console.log(data[0])
+    }
+
+
+
 
     return (
         <div className='flex flex-col h-screen items-center justify-center '>
@@ -26,16 +65,16 @@ function ChatInputBox() {
 
 
                 <div className='flex justify-between items-end'>
-                    <Tabs defaultValue="account" className="w-[400px]">
-                        <TabsContent value="account">
-                            <input type='text' placeholder='Ask Anything' className='w-full p-4 outline-none' />
+                    <Tabs defaultValue="search" className="w-[400px]">
+                        <TabsContent value="search">
+                            <input type='text' onChange={(e) => setUserSearchInput(e.target.value)} placeholder='Ask Anything' className='w-full p-4 outline-none' />
                         </TabsContent>
-                        <TabsContent value="password">
-                            <input type='text' placeholder='Research Anything' className='w-full p-4 outline-none' />
+                        <TabsContent value="research">
+                            <input type='text' onChange={(e) => setUserSearchInput(e.target.value)} placeholder='Research Anything' className='w-full p-4 outline-none' />
                         </TabsContent>
                         <TabsList>
-                            <TabsTrigger className='text-primary' value="account"><SearchCheck /> Search</TabsTrigger>
-                            <TabsTrigger className='text-primary' value="password"><Atom /> Deep Research</TabsTrigger>
+                            <TabsTrigger className='text-primary' value="search" onClick={() => setSearchType('search')}><SearchCheck /> Search</TabsTrigger>
+                            <TabsTrigger className='text-primary' value="research" onClick={() => setSearchType('research')}><Atom /> Deep Research</TabsTrigger>
                         </TabsList>
 
                     </Tabs>
@@ -61,13 +100,13 @@ function ChatInputBox() {
                                     AI Models
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                {AIModelsOption.map((model, index)=> {
+                                {AIModelsOption.map((model, index) => {
                                     const isActive = selectedModel?.name === model.name
                                     return (
                                         <DropdownMenuItem
                                             key={model.id ?? `${model.name}-${index}`}
-                                            className='flex items-center gap-3 rounded-xl px-3 py-2 text-sm data-[highlighted]:bg-primary/10'
-                                            onClick={()=> setSelectedModel(model)}
+                                            className='flex items-center gap-3 rounded-xl px-3 py-2 text-sm '
+                                            onClick={() => setSelectedModel(model)}
                                         >
                                             <div className='flex-1'>
                                                 <p className='font-semibold text-foreground'>{model.name}</p>
@@ -90,8 +129,14 @@ function ChatInputBox() {
                         <Button variant='outline' size='icon' className='rounded-full border-muted-foreground/30'>
                             <Mic className='h-5 w-5 text-muted-foreground' />
                         </Button>
-                        <Button size='icon' className='rounded-full bg-primary text-primary-foreground hover:bg-primary/90'>
-                            <AudioLines className='h-5 w-5' />
+                        <Button onClick={() => {
+                            userSearchInput ? onSearchQuery() : null
+                        }}
+                            size='icon' className='rounded-full bg-primary text-primary-foreground hover:bg-primary/90'>
+                            {!userSearchInput ?
+                                <AudioLines className='h-5 w-5' /> :
+                                <ArrowRight className='h-5 w-5' disabled={loading} />
+                            }
                         </Button>
 
 
